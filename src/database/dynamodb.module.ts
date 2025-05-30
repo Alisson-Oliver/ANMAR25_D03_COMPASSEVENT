@@ -1,10 +1,8 @@
-import { Global, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
+import { DynamoDBService } from './dynamodb.service';
 
-@Global()
 @Module({
-  imports: [],
-  controllers: [],
-  providers: [],
-  exports: [],
+  providers: [DynamoDBService],
+  exports: [DynamoDBService],
 })
 export class DynamodbModule {}

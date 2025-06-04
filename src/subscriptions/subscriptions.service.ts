@@ -141,6 +141,52 @@ export class SubscriptionService {
     }
   }
 
+  async softDelete(subscriptionId: string, userId: string) {
+    try {
+      const subscription = await this.findById(subscriptionId);
+
+      if (subscription.user_id !== userId) {
+        throw new ForbiddenException(
+          "you can't delete a subscription that doesn't belong to you",
+        );
+      }
+
+      const updatedSubscription = {
+        ...subscription,
+        deletedAt: new Date().toISOString(),
+        status: Status.INACTIVE,
+      };
+
+      await this.dynamoDBService.client.send(
+        new PutCommand({
+          TableName: this.tableName,
+          Item: updatedSubscription,
+        }),
+      );
+
+      const user = await this.userService.validateUser(subscription.user_id);
+
+      const event = await this.eventService.validateEvent(
+        subscription.event_id,
+      );
+
+      await this.sesMailService.sendEmail(
+        user.email,
+        `  Subscription Cancelled - ${event.name}`,
+        subscriptionDeletedEmailTemplate(
+          user.name,
+          event.name,
+          event.date,
+          event.imageUrl,
+        ),
+      );
+
+      return updatedSubscription;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async subscriptionExists(userId: string, eventId: string) {
     try {
       const result = await this.dynamoDBService.client.send(

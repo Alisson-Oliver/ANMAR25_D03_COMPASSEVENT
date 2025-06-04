@@ -194,6 +194,27 @@ export class EventService {
     }
   }
 
+  async nameExists(name: string) {
+    try {
+      const command = new ScanCommand({
+        TableName: this.tableName,
+        FilterExpression: '#name = :name',
+        ExpressionAttributeNames: {
+          '#name': 'name',
+        },
+        ExpressionAttributeValues: {
+          ':name': name,
+        },
+      });
+
+      const result = await this.dynamoDBService.client.send(command);
+
+      return result.Items && result.Items.length > 0 ? result.Items[0] : null;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async validateEvent(eventId: string) {
     const event = await this.findById(eventId);
     if (!event) {

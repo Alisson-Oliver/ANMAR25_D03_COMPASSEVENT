@@ -111,6 +111,48 @@ export class EventService {
     }
   }
 
+  async update(
+    eventId: string,
+    data: PatchEventDto,
+    userId: string,
+    userRole: string,
+  ) {
+    try {
+      if (!data) {
+        throw new BadRequestException('data is required');
+      }
+
+      const event = await this.validateEvent(eventId);
+
+      if (userId !== event.organizerId && userRole !== Role.ADMIN) {
+        throw new ForbiddenException('you can only update your own events');
+      }
+
+      if (data.name && data.name !== event.name) {
+        if (await this.nameExists(data.name)) {
+          throw new ConflictException('event name already exists');
+        }
+      }
+
+      const updatedEvent = {
+        ...event,
+        ...data,
+        updatedAt: new Date().toISOString(),
+      };
+
+      await this.dynamoDBService.client.send(
+        new PutCommand({
+          TableName: this.tableName,
+          Item: updatedEvent,
+        }),
+      );
+
+      return updatedEvent;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async validateEvent(eventId: string) {
     const event = await this.findById(eventId);
     if (!event) {

@@ -70,4 +70,20 @@ export class UserController {
   async findAll() {
     return await this.userService.findAll();
   }
+
+  @Roles(Role.ADMIN, Role.ORGANIZER, Role.PARTICIPANT)
+  @Patch(':id')
+  @HttpCode(204)
+  @UseGuards(AuthGuard, RoleGuard)
+  async update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body(new FormatPhonePipe()) data: PatchUserDto,
+    @Req() req,
+  ) {
+    if (req.user.id !== id) {
+      throw new ForbiddenException('you can only update your own profile');
+    }
+
+    await this.userService.update(id, data);
+  }
 }

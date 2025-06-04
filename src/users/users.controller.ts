@@ -86,4 +86,15 @@ export class UserController {
 
     await this.userService.update(id, data);
   }
+
+  @Roles(Role.ADMIN, Role.ORGANIZER, Role.PARTICIPANT)
+  @Delete(':id')
+  @HttpCode(204)
+  @UseGuards(AuthGuard, RoleGuard)
+  async softDelete(@Param('id', new ParseUUIDPipe()) id: string, @Req() req) {
+    if (req.user.id !== id && req.user.role !== Role.ADMIN) {
+      throw new ForbiddenException('you can only delete your own profile');
+    }
+    await this.userService.softDelete(id);
+  }
 }

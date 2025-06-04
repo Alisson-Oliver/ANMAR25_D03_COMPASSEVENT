@@ -60,4 +60,11 @@ export class EventController {
   async findAll() {
     return await this.eventService.findAll();
   }
+
+  @Get(':id')
+  @Roles(Role.ADMIN, Role.ORGANIZER, Role.PARTICIPANT)
+  @UseGuards(AuthGuard, RoleGuard)
+  async findById(@Req() req, @Param('id', new ParseUUIDPipe()) id: string) {
+    return await this.eventService.findById(id);
+  }
 }

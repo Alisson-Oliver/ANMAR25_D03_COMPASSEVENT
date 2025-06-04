@@ -4,7 +4,6 @@ import * as path from 'path';
 import { getAwsCredentials } from '../common/utils/awsCredentials.util';
 export class S3Service {
   private readonly s3: S3Client;
-  private readonly bucket = process.env.S3_BUCKET_NAME;
 
   constructor() {
     const { region, credentials } = getAwsCredentials();
@@ -15,19 +14,23 @@ export class S3Service {
     });
   }
 
-  async uploadFile(file: Express.Multer.File) {
-    const fileExtension = path.extname(file.originalname);
-    const fileName = `${uuid()}${fileExtension}`;
+  async uploadImage(
+    image: Express.Multer.File,
+    bucketName: string,
+    folder: string,
+  ) {
+    const imageExtension = path.extname(image.originalname);
+    const imageName = `${uuid()}${imageExtension}`;
 
     const command = new PutObjectCommand({
-      Bucket: this.bucket,
-      Key: fileName,
-      Body: file.buffer,
-      ContentType: file.mimetype,
+      Bucket: bucketName,
+      Key: `${folder}/${imageName}`,
+      Body: image.buffer,
+      ContentType: image.mimetype,
     });
 
     await this.s3.send(command);
 
-    return 'https://' + this.bucket + '.s3.amazonaws.com/' + fileName;
+    return `https://${bucketName}.s3.amazonaws.com/${folder}/${imageName}`;
   }
 }

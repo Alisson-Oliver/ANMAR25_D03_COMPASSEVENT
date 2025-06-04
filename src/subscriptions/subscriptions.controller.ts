@@ -26,4 +26,11 @@ export class SubscriptionController {
   async findAllById(@Req() req) {
     return await this.subscriptionService.findAllById(req.user.id);
   }
+
+  @Post()
+  @Roles(Role.PARTICIPANT, Role.ORGANIZER)
+  @UseGuards(AuthGuard, RoleGuard)
+  async create(@Body() data: CreateSubscriptionDto) {
+    return await this.subscriptionService.create(data);
+  }
 }

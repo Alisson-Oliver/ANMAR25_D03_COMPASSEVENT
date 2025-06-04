@@ -219,4 +219,22 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async phoneExists(phone: string) {
+    try {
+      const command = new ScanCommand({
+        TableName: this.tableName,
+        FilterExpression: 'phone = :phone',
+        ExpressionAttributeValues: {
+          ':phone': phone,
+        },
+      });
+      const result = await this.dynamoDBService.client.send(command);
+      if (result) {
+        return (result.Count ?? 0) > 0;
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

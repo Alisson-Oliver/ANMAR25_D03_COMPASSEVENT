@@ -5,6 +5,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { EventModule } from './events/events.module';
 import { SubscriptionModule } from './subscriptions/subscriptions.module';
+import { SeedModule } from './seed/seed.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { SubscriptionModule } from './subscriptions/subscriptions.module';
     UsersModule,
     EventModule,
     SubscriptionModule,
+    SeedModule,
   ],
   controllers: [],
   providers: [],

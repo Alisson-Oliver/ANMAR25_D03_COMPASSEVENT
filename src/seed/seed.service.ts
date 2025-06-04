@@ -8,6 +8,7 @@ import { v4 as uuid } from 'uuid';
 import * as bcrypt from 'bcrypt';
 import { PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { Role } from '../common/enum/roles.enum';
+import { Status } from '../common/enum/status.enum';
 
 @Injectable()
 export class SeedService {
@@ -48,6 +49,8 @@ export class SeedService {
       email: defaultUserEmail,
       password: await bcrypt.hash(defaultUserPassword, await bcrypt.genSalt()),
       role: Role.ADMIN,
+      emailVerified: true,
+      status: Status.ACTIVE,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };

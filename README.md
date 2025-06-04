@@ -61,7 +61,7 @@ DYNAMODB_TABLE_EVENTS=events
 DYNAMODB_TABLE_SUBSCRIPTIONS=subscriptions
 
 # S3
-S3_BUCKET_NAME=your-s3-bucket-name
+S3_BUCKET_NAME=your-s3-bucket-name # This is the bucket used for storing and resizing images
 S3_EVENTS_FOLDER=events
 S3_USERS_FOLDER=users
 
@@ -83,6 +83,14 @@ DEFAULT_USER_NAME=Admin
 DEFAULT_USER_EMAIL=admin@example.com
 DEFAULT_USER_PASSWORD=YourSecurePassword!123
 ```
+
+If your application requires image resizing, make sure to set up an AWS Lambda function to handle this process.
+
+- The Lambda should be triggered by S3 events (e.g., `ObjectCreated`).
+- It should automatically resize images uploaded to the S3 bucket specified in `S3_BUCKET_NAME`.
+- Resized images can be saved back into the same bucket, either in the same folder or a subfolder (e.g., `/resized`).
+
+> **Note:** This repository does not include the Lambda function implementation. You need to configure it in your AWS account if automatic image resizing is needed.
 
 ## 🚀 How to Run the Project
 

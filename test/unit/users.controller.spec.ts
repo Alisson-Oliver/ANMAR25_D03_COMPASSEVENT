@@ -10,7 +10,7 @@ import { FormatPhonePipe } from '../../src/common/pipes/format-phone.pipe';
 import { ValidationImagePipe } from '../../src/common/pipes/validation-image.pipe';
 import { CreateUserDto } from '../../src/users/dto/create-user.dto';
 import { Role } from '../../src/common/enum/roles.enum';
-import { PaginationQueryDto } from '../../src/users/dto/pagination.dto';
+import { PaginationQueryDto } from '../../src/users/dto/user-pagination-query.dto';
 import { PatchUserDto } from '../../src/users/dto/patch-user.dto';
 
 import { Readable } from 'stream';

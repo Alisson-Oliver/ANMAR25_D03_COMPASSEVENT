@@ -90,4 +90,18 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async findAll() {
+    try {
+      const users = await this.dynamoDBService.client.send(
+        new ScanCommand({
+          TableName: this.tableName,
+        }),
+      );
+
+      return { count: users.Count, data: users.Items };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

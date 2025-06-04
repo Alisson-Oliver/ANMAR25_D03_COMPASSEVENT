@@ -103,6 +103,24 @@ export class SubscriptionService {
     return subscription;
   }
 
+  async findAllById(userId: string) {
+    try {
+      const subscriptions = await this.dynamoDBService.client.send(
+        new ScanCommand({
+          TableName: this.tableName,
+          FilterExpression: 'user_id = :user_id',
+          ExpressionAttributeValues: {
+            ':user_id': userId,
+          },
+        }),
+      );
+
+      return { count: subscriptions.Count, data: subscriptions.Items };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async subscriptionExists(userId: string, eventId: string) {
     try {
       const result = await this.dynamoDBService.client.send(

@@ -28,6 +28,7 @@ import { Role } from '../common/enum/roles.enum';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { RoleGuard } from '../common/guards/role.guard';
 import { ValidationImagePipe } from '../common/pipes/validation-image.pipe';
+import { PaginationQueryDto } from './dto/pagination.dto';
 
 @Controller('/users')
 export class UserController {
@@ -67,8 +68,8 @@ export class UserController {
   @Roles(Role.ADMIN)
   @UseGuards(AuthGuard, RoleGuard)
   @Get()
-  async findAll() {
-    return await this.userService.findAll();
+  async findAll(@Query() query: PaginationQueryDto) {
+    return await this.userService.findAll(query);
   }
 
   @Roles(Role.ADMIN, Role.ORGANIZER, Role.PARTICIPANT)

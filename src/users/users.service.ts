@@ -23,7 +23,7 @@ import { PatchUserDto } from './dto/patch-user.dto';
 import { accountDeletedEmailTemplate } from '../emails/templates/users/account-deleted-email.template';
 import { EmailSendStatus } from '../common/enum/email-send-status.enum';
 import { Status } from '../common/enum/status.enum';
-import { PaginationQueryDto } from './dto/pagination.dto';
+import { PaginationQueryDto } from './dto/user-pagination-query.dto';
 
 @Injectable()
 export class UserService {

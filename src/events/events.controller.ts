@@ -67,4 +67,16 @@ export class EventController {
   async findById(@Req() req, @Param('id', new ParseUUIDPipe()) id: string) {
     return await this.eventService.findById(id);
   }
+
+  @Patch(':id')
+  @Roles(Role.ADMIN, Role.ORGANIZER)
+  @UseGuards(AuthGuard, RoleGuard)
+  @HttpCode(204)
+  async update(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() data: PatchEventDto,
+    @Req() req,
+  ) {
+    await this.eventService.update(id, data, req.user.id, req.user.role);
+  }
 }

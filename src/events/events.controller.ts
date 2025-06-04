@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,6 +8,7 @@ import {
   ParseUUIDPipe,
   Patch,
   Post,
+  Query,
   Req,
   UploadedFile,
   UseGuards,
@@ -25,6 +25,7 @@ import { PatchEventDto } from './dto/patch-events.dto';
 import { ValidationImagePipe } from '../common/pipes/validation-image.pipe';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enum/roles.enum';
+import { EventPaginationQueryDto } from './dto/event-pagination-query.dto';
 
 @Controller('/events')
 export class EventController {
@@ -57,8 +58,8 @@ export class EventController {
   @Get()
   @Roles(Role.ADMIN, Role.ORGANIZER, Role.PARTICIPANT)
   @UseGuards(AuthGuard, RoleGuard)
-  async findAll() {
-    return await this.eventService.findAll();
+  async findAll(@Query() query: EventPaginationQueryDto) {
+    return await this.eventService.findAll(query);
   }
 
   @Get(':id')

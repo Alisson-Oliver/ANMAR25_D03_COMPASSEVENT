@@ -78,6 +78,20 @@ export class EventService {
     }
   }
 
+  async findAll() {
+    try {
+      const events = await this.dynamoDBService.client.send(
+        new ScanCommand({
+          TableName: this.tableName,
+        }),
+      );
+
+      return { count: events.Count, data: events.Items };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async validateEvent(eventId: string) {
     const event = await this.findById(eventId);
     if (!event) {

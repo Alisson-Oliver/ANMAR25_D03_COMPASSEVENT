@@ -40,4 +40,24 @@ export class AuthService {
       throw new BadRequestException('Invalid token');
     }
   }
+
+  async login(email: string, password: string) {
+    const user = await this.userService.emailExists(email);
+
+    if (!user) {
+      throw new BadRequestException('invalid email or password');
+    }
+    if (user.deletedAt) {
+      throw new BadRequestException('user account is deleted');
+    }
+    if (!user.emailVerified) {
+      throw new BadRequestException('email not verified');
+    }
+
+    if (!(await bcrypt.compare(password, user.password))) {
+      throw new BadRequestException('invalid email or password');
+    }
+
+    return this.createLoginToken(user);
+  }
 }

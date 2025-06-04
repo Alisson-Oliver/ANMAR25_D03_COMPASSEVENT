@@ -149,4 +149,35 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async softDelete(userId: string) {
+    try {
+      const user = await this.validateUser(userId);
+
+      const deletedUser = {
+        id: userId,
+        ...user,
+        status: Status.INACTIVE,
+        deletedAt: new Date().toISOString(),
+      };
+      await this.dynamoDBService.client.send(
+        new PutCommand({
+          TableName: this.tableName,
+          Item: deletedUser,
+        }),
+      );
+
+      if (process.env.MAIL_FROM_ADDRESS) {
+        await this.sesMailService.sendEmail(
+          user.email,
+          'Your Account Has Been Successfully Deleted',
+          accountDeletedEmailTemplate(user.name),
+        );
+      }
+
+      return true;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

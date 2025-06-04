@@ -10,4 +10,9 @@ export class AuthController {
   async verifyEmail(@Query('token') token: string) {
     return this.authService.verifyEmail(token);
   }
+
+  @Post('login')
+  async login(@Body() { email, password }: AuthLoginDto) {
+    return this.authService.login(email, password);
+  }
 }

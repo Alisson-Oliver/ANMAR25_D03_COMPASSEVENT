@@ -7,7 +7,14 @@ import { EventModule } from './events/events.module';
 import { SubscriptionModule } from './subscriptions/subscriptions.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), DynamodbModule, AuthModule, UsersModule],
+  imports: [
+    ConfigModule.forRoot(),
+    DynamodbModule,
+    AuthModule,
+    UsersModule,
+    EventModule,
+    SubscriptionModule,
+  ],
   controllers: [],
   providers: [],
 })

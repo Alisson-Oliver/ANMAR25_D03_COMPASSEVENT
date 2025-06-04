@@ -153,6 +153,47 @@ export class EventService {
     }
   }
 
+  async softDelete(eventId: string, userId: string, userRole: string) {
+    try {
+      const event = await this.validateEvent(eventId);
+
+      if (userId !== event.organizerId && userRole !== Role.ADMIN) {
+        throw new ForbiddenException('you can only delete your own events');
+      }
+
+      const updatedEvent = {
+        ...event,
+        deletedAt: new Date().toISOString(),
+        status: Status.INACTIVE,
+      };
+
+      const organizer = await this.userService.findById(event.organizerId);
+
+      await this.dynamoDBService.client.send(
+        new PutCommand({
+          TableName: this.tableName,
+          Item: updatedEvent,
+        }),
+      );
+
+      await this.sesMailService.sendEmail(
+        organizer.email,
+        `Your event has been canceled: ${event.name}`,
+        eventDeletedEmailTemplate(
+          organizer.name,
+          event.name,
+          new Date(event.date).toISOString(),
+          event.description,
+          event.imageUrl,
+        ),
+      );
+
+      return updatedEvent;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async validateEvent(eventId: string) {
     const event = await this.findById(eventId);
     if (!event) {

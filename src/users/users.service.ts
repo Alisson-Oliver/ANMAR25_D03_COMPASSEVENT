@@ -70,4 +70,24 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async findById(userId: string) {
+    try {
+      const user = await this.dynamoDBService.client.send(
+        new GetCommand({
+          TableName: this.tableName,
+          Key: {
+            id: userId,
+          },
+        }),
+      );
+
+      if (!user.Item) {
+        throw new NotFoundException('user not found');
+      }
+      return user.Item;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

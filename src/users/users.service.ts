@@ -202,4 +202,21 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async emailExists(email: string) {
+    try {
+      const command = new ScanCommand({
+        TableName: this.tableName,
+        FilterExpression: 'email = :email',
+        ExpressionAttributeValues: {
+          ':email': email,
+        },
+      });
+      const result = await this.dynamoDBService.client.send(command);
+
+      return result.Items && result.Items[0] ? result.Items[0] : null;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

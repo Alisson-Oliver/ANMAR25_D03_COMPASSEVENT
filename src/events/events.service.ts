@@ -92,6 +92,25 @@ export class EventService {
     }
   }
 
+  async findById(eventId: string) {
+    try {
+      const event = await this.dynamoDBService.client.send(
+        new GetCommand({
+          TableName: this.tableName,
+          Key: {
+            id: eventId,
+          },
+        }),
+      );
+      if (!event.Item) {
+        throw new BadRequestException('event not found');
+      }
+      return event.Item;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async validateEvent(eventId: string) {
     const event = await this.findById(eventId);
     if (!event) {

@@ -53,4 +53,11 @@ export class EventController {
     );
     return await this.eventService.create(data, req.user, imageUrl);
   }
+
+  @Get()
+  @Roles(Role.ADMIN, Role.ORGANIZER, Role.PARTICIPANT)
+  @UseGuards(AuthGuard, RoleGuard)
+  async findAll() {
+    return await this.eventService.findAll();
+  }
 }

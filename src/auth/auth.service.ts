@@ -60,4 +60,14 @@ export class AuthService {
 
     return this.createLoginToken(user);
   }
+
+  verifyEmail(token: string) {
+    try {
+      const data = this.JWTService.verify(token);
+      this.userService.verifyUserEmail(data.sub);
+      return data;
+    } catch (error) {
+      throw new BadRequestException(error);
+    }
+  }
 }

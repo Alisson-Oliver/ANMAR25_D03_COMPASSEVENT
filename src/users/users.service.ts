@@ -87,6 +87,9 @@ export class UserService {
       if (!user.Item) {
         throw new NotFoundException('user not found');
       }
+
+      delete user.Item.password;
+
       return user.Item;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -315,7 +318,7 @@ export class UserService {
       expiresIn: process.env.JWT_EMAIL_VERIFICATION_EXPIRES_IN,
     });
 
-    const verificationLink = `${process.env.API_BASE_URL}/auth/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.API_BASE_URL}/api/v1/auth/verify-email?token=${verificationToken}`;
 
     const emailStatus = await this.sesMailService.sendEmail(
       user.email,

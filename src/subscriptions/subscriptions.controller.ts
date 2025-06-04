@@ -11,11 +11,11 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { SubscriptionService } from './subscriptions.service';
-import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { RoleGuard } from '../common/guards/role.guard';
 import { AuthGuard } from '../common/guards/auth.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enum/roles.enum';
+import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 
 @Controller('/subscriptions')
 export class SubscriptionController {

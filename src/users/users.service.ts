@@ -104,4 +104,49 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async update(userId: string, data: PatchUserDto) {
+    try {
+      if (!data) {
+        throw new BadRequestException('No data provided for update');
+      }
+
+      const user = await this.validateUser(userId);
+
+      if (data.password) {
+        data.password = await bcrypt.hash(
+          data.password,
+          await bcrypt.genSalt(),
+        );
+      }
+
+      if (data.email && data.email !== user.email) {
+        if (await this.emailExists(data.email)) {
+          throw new ConflictException('email already exists');
+        }
+      }
+
+      if (data.phone && data.phone !== user.phone) {
+        if (await this.phoneExists(data.phone)) {
+          throw new ConflictException('phone already exists');
+        }
+      }
+
+      const updatedUser = {
+        id: userId,
+        ...user,
+        ...data,
+        updatedAt: new Date().toISOString(),
+      };
+      await this.dynamoDBService.client.send(
+        new PutCommand({
+          TableName: this.tableName,
+          Item: updatedUser,
+        }),
+      );
+      return updatedUser;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

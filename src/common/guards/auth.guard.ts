@@ -6,7 +6,7 @@ import { UserService } from '../../users/users.service';
 export class AuthGuard implements CanActivate {
   constructor(
     private readonly authService: AuthService,
-    private readonly userSerivice: UserService,
+    private readonly userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -19,7 +19,12 @@ export class AuthGuard implements CanActivate {
 
       request.tokenPayload = data;
 
-      request.user = await this.userSerivice.findById(data.id);
+      const user = await this.userService.findById(data.id);
+      if (!user) {
+        return false;
+      }
+
+      request.user = user;
 
       return true;
     } catch (error) {

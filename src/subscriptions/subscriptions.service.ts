@@ -6,7 +6,12 @@ import {
 } from '@nestjs/common';
 import { DynamoDBService } from '../database/dynamodb.service';
 import { ICalendarAttachment, SESMailService } from '../emails/aws-ses.service';
-import { GetCommand, PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  GetCommand,
+  PutCommand,
+  ScanCommand,
+  ScanCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 import { v4 as uuid } from 'uuid';
 import { Status } from '../common/enum/status.enum';
 import { UserService } from '../users/users.service';
@@ -15,6 +20,7 @@ import { CreateSubscriptionDto } from './dto/create-subscription.dto';
 import { subscriptionCreatedEmailTemplate } from '../emails/templates/subscriptions/subscription-created-email.template';
 import { generateICalFile } from '../common/utils/generate-ical-file.util';
 import { subscriptionDeletedEmailTemplate } from '../emails/templates/subscriptions/subscription-deleted-email.template';
+import { SubscriptionPaginationQueryDto } from './dto/subscription-pagination-query.dto';
 
 @Injectable()
 export class SubscriptionService {
@@ -103,19 +109,44 @@ export class SubscriptionService {
     return subscription;
   }
 
-  async findAllById(userId: string) {
+  async findAllById(
+    userId: string,
+    query: SubscriptionPaginationQueryDto,
+  ): Promise<{ count: number; data: any[]; lastKey?: string; page: number }> {
+    const { limit = 10, lastKey, page = 1 } = query;
+
+    const params: ScanCommandInput = {
+      TableName: this.tableName,
+      Limit: Number(limit),
+      FilterExpression: 'user_id = :user_id',
+      ExpressionAttributeValues: {
+        ':user_id': userId,
+      },
+    };
+
+    if (lastKey) {
+      try {
+        params.ExclusiveStartKey = JSON.parse(lastKey);
+      } catch (error) {
+        throw new BadRequestException('Invalid lastKey format.');
+      }
+    }
+
     try {
-      const subscriptions = await this.dynamoDBService.client.send(
-        new ScanCommand({
-          TableName: this.tableName,
-          FilterExpression: 'user_id = :user_id',
-          ExpressionAttributeValues: {
-            ':user_id': userId,
-          },
-        }),
+      const result = await this.dynamoDBService.client.send(
+        new ScanCommand(params),
       );
 
-      return { count: subscriptions.Count, data: subscriptions.Items };
+      const items = result.Items || [];
+
+      return {
+        count: result.Count || 0,
+        data: items,
+        lastKey: result.LastEvaluatedKey
+          ? JSON.stringify(result.LastEvaluatedKey)
+          : undefined,
+        page: Number(page),
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }

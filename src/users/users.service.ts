@@ -12,6 +12,7 @@ import {
   GetCommand,
   PutCommand,
   ScanCommand,
+  ScanCommandInput,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { SESMailService } from '../emails/aws-ses.service';
@@ -22,6 +23,7 @@ import { PatchUserDto } from './dto/patch-user.dto';
 import { accountDeletedEmailTemplate } from '../emails/templates/users/account-deleted-email.template';
 import { EmailSendStatus } from '../common/enum/email-send-status.enum';
 import { Status } from '../common/enum/status.enum';
+import { PaginationQueryDto } from './dto/user-pagination-query.dto';
 
 @Injectable()
 export class UserService {
@@ -85,21 +87,74 @@ export class UserService {
       if (!user.Item) {
         throw new NotFoundException('user not found');
       }
+
+      delete user.Item.password;
+
       return user.Item;
     } catch (error) {
       throw new BadRequestException(error.message);
     }
   }
 
-  async findAll() {
+  async findAll(
+    query: PaginationQueryDto,
+  ): Promise<{ count: number; data: any[]; lastKey?: Record<string, any> }> {
+    const { limit = 10, lastKey, name, email, role } = query;
+
+    const params: ScanCommandInput = {
+      TableName: this.tableName,
+      Limit: Number(limit),
+    };
+
+    if (lastKey) {
+      try {
+        params.ExclusiveStartKey = JSON.parse(lastKey);
+      } catch (error) {
+        throw new BadRequestException('lastKey invalid.');
+      }
+    }
+
+    const filterExpressions: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, any> = {};
+
+    if (name) {
+      filterExpressions.push('contains(#name, :nameVal)');
+      expressionAttributeNames['#name'] = 'name';
+      expressionAttributeValues[':nameVal'] = name;
+    }
+
+    if (email) {
+      filterExpressions.push('contains(#email, :emailVal)');
+      expressionAttributeNames['#email'] = 'email';
+      expressionAttributeValues[':emailVal'] = email;
+    }
+
+    if (role) {
+      filterExpressions.push('#role = :roleVal');
+      expressionAttributeNames['#role'] = 'role';
+      expressionAttributeValues[':roleVal'] = role;
+    }
+
+    if (filterExpressions.length > 0) {
+      params.FilterExpression = filterExpressions.join(' AND ');
+      params.ExpressionAttributeNames = expressionAttributeNames;
+      params.ExpressionAttributeValues = expressionAttributeValues;
+    }
+
     try {
-      const users = await this.dynamoDBService.client.send(
-        new ScanCommand({
-          TableName: this.tableName,
-        }),
+      const result = await this.dynamoDBService.client.send(
+        new ScanCommand(params),
       );
 
-      return { count: users.Count, data: users.Items };
+      const itemsSemSenha =
+        result.Items?.map(({ password, ...rest }) => rest) || [];
+
+      return {
+        count: result.Count || 0,
+        data: itemsSemSenha,
+        lastKey: result.LastEvaluatedKey,
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }
@@ -263,7 +318,7 @@ export class UserService {
       expiresIn: process.env.JWT_EMAIL_VERIFICATION_EXPIRES_IN,
     });
 
-    const verificationLink = `${process.env.API_BASE_URL}/auth/verify-email?token=${verificationToken}`;
+    const verificationLink = `${process.env.API_BASE_URL}/api/v1/auth/verify-email?token=${verificationToken}`;
 
     const emailStatus = await this.sesMailService.sendEmail(
       user.email,

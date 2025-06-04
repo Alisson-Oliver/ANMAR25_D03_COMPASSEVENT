@@ -13,6 +13,7 @@ import {
   GetCommand,
   PutCommand,
   ScanCommand,
+  ScanCommandInput,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { eventCreatedEmailTemplate } from '../emails/templates/events/event-created-email.template';
@@ -21,6 +22,7 @@ import { Status } from '../common/enum/status.enum';
 import { UserService } from '../users/users.service';
 import { eventDeletedEmailTemplate } from '../emails/templates/events/event-deleted-email.template';
 import { Role } from '../common/enum/roles.enum';
+import { EventPaginationQueryDto } from './dto/event-pagination-query.dto';
 
 @Injectable()
 export class EventService {
@@ -78,15 +80,67 @@ export class EventService {
     }
   }
 
-  async findAll() {
+  async findAll(
+    query: EventPaginationQueryDto,
+  ): Promise<{ count: number; data: any[]; lastKey?: string; page: number }> {
+    const { limit = 10, lastKey, name, date, status, page = 1 } = query;
+
+    const params: ScanCommandInput = {
+      TableName: this.tableName,
+      Limit: Number(limit),
+    };
+
+    if (lastKey) {
+      try {
+        params.ExclusiveStartKey = JSON.parse(lastKey);
+      } catch (error) {
+        throw new BadRequestException('Invalid lastKey.');
+      }
+    }
+
+    const filterExpressions: string[] = [];
+    const expressionAttributeNames: Record<string, string> = {};
+    const expressionAttributeValues: Record<string, any> = {};
+
+    if (name) {
+      filterExpressions.push('contains(#name, :nameVal)');
+      expressionAttributeNames['#name'] = 'name';
+      expressionAttributeValues[':nameVal'] = name;
+    }
+
+    if (date) {
+      filterExpressions.push('#date <= :dateVal');
+      expressionAttributeNames['#date'] = 'date';
+      expressionAttributeValues[':dateVal'] = date;
+    }
+
+    if (status) {
+      filterExpressions.push('#status = :statusVal');
+      expressionAttributeNames['#status'] = 'status';
+      expressionAttributeValues[':statusVal'] = status;
+    }
+
+    if (filterExpressions.length > 0) {
+      params.FilterExpression = filterExpressions.join(' AND ');
+      params.ExpressionAttributeNames = expressionAttributeNames;
+      params.ExpressionAttributeValues = expressionAttributeValues;
+    }
+
     try {
-      const events = await this.dynamoDBService.client.send(
-        new ScanCommand({
-          TableName: this.tableName,
-        }),
+      const result = await this.dynamoDBService.client.send(
+        new ScanCommand(params),
       );
 
-      return { count: events.Count, data: events.Items };
+      const items = result.Items || [];
+
+      return {
+        count: result.Count || 0,
+        data: items,
+        lastKey: result.LastEvaluatedKey
+          ? JSON.stringify(result.LastEvaluatedKey)
+          : undefined,
+        page: Number(page),
+      };
     } catch (error) {
       throw new BadRequestException(error.message);
     }

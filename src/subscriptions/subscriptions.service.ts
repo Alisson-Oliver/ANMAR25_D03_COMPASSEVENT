@@ -121,6 +121,26 @@ export class SubscriptionService {
     }
   }
 
+  async findById(subscriptionId: string) {
+    try {
+      const subscription = await this.dynamoDBService.client.send(
+        new GetCommand({
+          TableName: this.tableName,
+          Key: {
+            id: subscriptionId,
+          },
+        }),
+      );
+
+      if (!subscription.Item) {
+        throw new NotFoundException('subscription not found');
+      }
+      return subscription.Item;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async subscriptionExists(userId: string, eventId: string) {
     try {
       const result = await this.dynamoDBService.client.send(

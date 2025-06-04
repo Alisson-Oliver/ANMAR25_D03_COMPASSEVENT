@@ -79,4 +79,12 @@ export class EventController {
   ) {
     await this.eventService.update(id, data, req.user.id, req.user.role);
   }
+
+  @Delete(':id')
+  @Roles(Role.ADMIN, Role.ORGANIZER)
+  @UseGuards(AuthGuard, RoleGuard)
+  @HttpCode(204)
+  async softDelete(@Param('id', new ParseUUIDPipe()) id: string, @Req() req) {
+    await this.eventService.softDelete(id, req.user.id, req.user.role);
+  }
 }

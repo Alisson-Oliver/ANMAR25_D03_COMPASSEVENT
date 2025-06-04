@@ -251,4 +251,28 @@ export class UserService {
     }
     return user;
   }
+
+  private async sendEmailVerification(user: any) {
+    const verificationTokenPayload = {
+      email: user.email,
+      sub: user.id,
+      type: 'email-verification',
+    };
+    const verificationToken = this.jwtService.sign(verificationTokenPayload, {
+      secret: process.env.JWT_SECRET,
+      expiresIn: process.env.JWT_EMAIL_VERIFICATION_EXPIRES_IN,
+    });
+
+    const verificationLink = `${process.env.API_BASE_URL}/auth/verify-email?token=${verificationToken}`;
+
+    const emailStatus = await this.sesMailService.sendEmail(
+      user.email,
+      'Confirm your email and start using Compass Events!  🧡',
+      verificationEmailTemplate(user.name, verificationLink),
+    );
+
+    if (emailStatus === EmailSendStatus.DISABLED) {
+      await this.verifyUserEmail(user.id);
+    }
+  }
 }

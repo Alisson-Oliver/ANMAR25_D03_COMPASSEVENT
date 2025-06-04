@@ -68,7 +68,7 @@ export class SESMailService {
             Body: { Html: { Data: htmlBody } },
             Subject: { Data: subject },
           },
-          Source: String(process.env.MAIL_FROM_ADDRESS),
+          Source: `Compass Events <${String(process.env.MAIL_FROM_ADDRESS)}>`,
         });
       }
 

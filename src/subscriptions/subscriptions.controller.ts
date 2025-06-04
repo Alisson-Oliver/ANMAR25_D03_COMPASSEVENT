@@ -33,4 +33,11 @@ export class SubscriptionController {
   async create(@Body() data: CreateSubscriptionDto) {
     return await this.subscriptionService.create(data);
   }
+
+  @Delete(':id')
+  @Roles(Role.ORGANIZER, Role.PARTICIPANT)
+  @UseGuards(AuthGuard, RoleGuard)
+  async delete(@Param('id', new ParseUUIDPipe()) id: string, @Req() req) {
+    return await this.subscriptionService.softDelete(id, req.user.id);
+  }
 }

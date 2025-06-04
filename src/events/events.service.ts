@@ -77,4 +77,15 @@ export class EventService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async validateEvent(eventId: string) {
+    const event = await this.findById(eventId);
+    if (!event) {
+      throw new BadRequestException('event not found');
+    }
+    if (event.status === Status.INACTIVE) {
+      throw new ConflictException('event is inactive');
+    }
+    return event;
+  }
 }

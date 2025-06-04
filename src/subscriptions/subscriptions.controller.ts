@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  HttpCode,
   Param,
   ParseUUIDPipe,
   Post,
@@ -37,7 +38,8 @@ export class SubscriptionController {
   @Delete(':id')
   @Roles(Role.ORGANIZER, Role.PARTICIPANT)
   @UseGuards(AuthGuard, RoleGuard)
+  @HttpCode(204)
   async delete(@Param('id', new ParseUUIDPipe()) id: string, @Req() req) {
-    return await this.subscriptionService.softDelete(id, req.user.id);
+    await this.subscriptionService.softDelete(id, req.user.id);
   }
 }

@@ -237,4 +237,18 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async validateUser(userId: string) {
+    const user = await this.findById(userId);
+    if (!user) {
+      throw new NotFoundException('user not found');
+    }
+    if (user.status === Status.INACTIVE) {
+      throw new ForbiddenException('user is inactive');
+    }
+    if (!user.emailVerified) {
+      throw new ForbiddenException('email not verified');
+    }
+    return user;
+  }
 }

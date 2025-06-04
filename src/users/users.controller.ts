@@ -53,4 +53,14 @@ export class UserController {
     );
     return await this.userService.create(data, imageUrl);
   }
+
+  @Roles(Role.ADMIN, Role.ORGANIZER, Role.PARTICIPANT)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Get(':id')
+  async findById(@Param('id', new ParseUUIDPipe()) id: string, @Req() req) {
+    if (req.user.id !== id) {
+      throw new ForbiddenException('you can only view your own profile');
+    }
+    return await this.userService.findById(id);
+  }
 }

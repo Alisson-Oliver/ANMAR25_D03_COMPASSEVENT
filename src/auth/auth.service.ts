@@ -28,4 +28,16 @@ export class AuthService {
       ),
     };
   }
+
+  checkToken(token: string) {
+    try {
+      const decoded = this.JWTService.verify(token, {
+        secret: process.env.JWT_SECRET,
+      });
+      return decoded;
+    } catch (error) {
+      Logger.error('Invalid token', error);
+      throw new BadRequestException('Invalid token');
+    }
+  }
 }

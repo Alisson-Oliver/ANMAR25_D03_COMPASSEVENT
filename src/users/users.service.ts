@@ -180,4 +180,26 @@ export class UserService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async verifyUserEmail(userId: string) {
+    try {
+      const updatedUser = await this.dynamoDBService.client.send(
+        new UpdateCommand({
+          TableName: this.tableName,
+          Key: {
+            id: userId,
+          },
+          UpdateExpression: 'set emailVerified = :emailVerified',
+          ExpressionAttributeValues: {
+            ':emailVerified': true,
+          },
+          ReturnValues: 'ALL_NEW',
+        }),
+      );
+
+      return updatedUser;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
 }

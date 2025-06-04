@@ -63,4 +63,11 @@ export class UserController {
     }
     return await this.userService.findById(id);
   }
+
+  @Roles(Role.ADMIN)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Get()
+  async findAll() {
+    return await this.userService.findAll();
+  }
 }
